@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+
+
+<?import javafx.scene.control.Button?>
+<GridPane fx:id="grid_login" alignment="center" hgap="10" styleClass="root"
+          vgap="10" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+   <columnConstraints>
+      <ColumnConstraints />
+      <ColumnConstraints />
+   </columnConstraints>
+   <rowConstraints>
+      <RowConstraints />
+      <RowConstraints />
+   </rowConstraints>
+   <children>
+      <Label text="Username" />
+      <Label text="Password" GridPane.rowIndex="1" />
+      <TextField fx:id="tf_login_username" id="tf_login_username" GridPane.columnIndex="1" />
+      <TextField fx:id="tf_login_password" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+       <Button text="Login" fx:id="btn_login" GridPane.columnIndex="3" GridPane.rowIndex="2" onAction="#switchSceneButtonAction"/>
+   </children>
+</GridPane>

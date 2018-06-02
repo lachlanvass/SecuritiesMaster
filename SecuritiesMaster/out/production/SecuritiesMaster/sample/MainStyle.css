@@ -1,0 +1,28 @@
+.root {
+
+
+}
+
+.button {
+
+    -fx-background-color: yellow;
+
+}
+
+#chart {
+
+    -fx-opacity: 50%;
+
+}
+
+#ta_stock_ticker {
+
+    -fx-alignment: "TOP_RIGHT";
+
+}
+
+#main_grid {
+
+    -fx-background-color: grey;
+
+}
