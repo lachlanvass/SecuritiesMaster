@@ -1,40 +1,41 @@
 package sample;
 
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
-import javafx.scene.paint.Color;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javax.json.*;
 
-import javax.sound.sampled.Line;
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Random;
-import java.util.Scanner;
 
 public class Controller {
 
+    double LINE_CHART_SIZE = 0.2;
+    byte graph_row_index = 0;
     @FXML private TextField tf_stock_searcher;
 
     private double[] dataSet = new double[6];
 
     @FXML private GridPane grid_login;
+    @FXML private GridPane grid_main;
     @FXML private Button btn_login;
     @FXML private Button btn_back;
     @FXML private TextField tf_login_username;
+    @FXML private LineChart line_chart_main;
+
+    private VBox vb_graphBox = new VBox();
     @FXML protected void handleStockSearch(ActionEvent action) {
 
         System.out.println(tf_stock_searcher.getText());
@@ -48,29 +49,107 @@ public class Controller {
 
     }
 
-    @FXML protected void spawnGraph (ActionEvent event) {
+    @FXML protected void mouseClickEventHandle(javafx.scene.input.MouseEvent event) {
+        System.out.println(event.getSource());
+    }
 
+    private void populateMainLineChart(double[] MainChartData) {
+        // Populate the main line chart with data
+        // Used in onMouseClicked event handlers for side line charts
+
+        // remove chart from main grid - overwriting it
+        // Otherwise draws new graph atop the old one.
+        grid_main.getChildren().remove(line_chart_main);
+        RandomGraph randomGraph = new RandomGraph();
+        line_chart_main = randomGraph.getGraph(false, MainChartData);
+        grid_main.add(line_chart_main, 1, 5);
+    }
+
+    @FXML protected void spawnGraph (ActionEvent event) throws FileNotFoundException, IOException{
+
+        // Handle graph drawing events
         dataSet[0] = 10;
         dataSet[1] = 15;
         dataSet[2] = 20;
         dataSet[3] = 1;
         dataSet[4] = 23;
         dataSet[5] = 12;
-        String result = getStockSearcherValue(event);
-        System.out.println(result);
+
+        ArrayList<Number> stockData = new ArrayList<Number>();
+        String csvFilePath = "stockData.csv";
+        BufferedReader br = null;
+        String line = "";
+        String separator = ",";
+
+        br = new BufferedReader(new FileReader(csvFilePath));
+        while ((line = br.readLine()) != null) {
+
+            // use comma as separator
+            String[] data = line.split(separator);
+            try {
+                float dataPoint = Float.valueOf(data[1]);
+                stockData.add(dataPoint);
+            }
+            catch (NumberFormatException nfe) {
+                System.out.println("Error: Not a number");
+            }
+        }
+
+        br.close();
+
+        for (Number f: stockData
+             ) {
+
+            System.out.println(f);
+
+        }
+
         RandomGraph randomGraph = new RandomGraph();
+
+
+        LineChart chart;
         if (tf_stock_searcher.getText().equals("SEC")){
-            System.out.println(true);
-            LineChart chart = randomGraph.getGraph(false, dataSet);
-            grid_login.add(chart, 1, 1);
+            chart = randomGraph.getGraph(false, dataSet);
         }
+
         else {
-            LineChart chart = randomGraph.getGraph(true, dataSet);
-            grid_login.add(chart, 1, 1);
+            chart = randomGraph.getGraph(true, dataSet);
         }
+        ArrayList<Number> chartData = new ArrayList<Number>();
+        //chartData = chart.getData().toArray();
+        chart.setMaxSize(LINE_CHART_SIZE, LINE_CHART_SIZE);
+        // Declare event so that when chart is clicked, the main chart assumes its data.
+        chart.setOnMouseClicked(new EventHandler<javafx.scene.input.MouseEvent>() {
+            @Override
+            public void handle(javafx.scene.input.MouseEvent event) {
+
+               // populateMainLineChart();
+            }
+        });
+
+
+        VBox vb_graphBox = new VBox();
+        vb_graphBox.setSpacing(10);
+        vb_graphBox.setPadding(new Insets(0, 20, 10, 20));
+        vb_graphBox.getChildren().add(chart);
+        grid_main.add(vb_graphBox, 0, graph_row_index);
+        graph_row_index++;
 
     }
 
+    protected void loadGraphsFromFile() {
+        RandomGraph randomGraph = new RandomGraph();
+
+        for (int i = 0; i < 4; i++) {
+            VBox vb_graphBox = new VBox();
+            vb_graphBox.setSpacing(10);
+            vb_graphBox.setPadding(new Insets(0, 20, 10, 20));
+            LineChart chart = randomGraph.getGraph(false, dataSet);
+            vb_graphBox.getChildren().add(chart);
+            grid_main.add(vb_graphBox, 0, graph_row_index);
+            graph_row_index++;
+        }
+    }
     @FXML
     protected void switchSceneButtonAction(ActionEvent event) throws IOException {
         /* This method demonstrates changing scenes and loading a new FXML file*/
@@ -78,20 +157,17 @@ public class Controller {
 
         Stage stage;
         Parent root;
-
+        UserNameManager userNameManager = new UserNameManager();
         // Two different buttons in two different fxml files call this method
         // Therefore must use the references declared at the beginning of the class
-        
+
         if (event.getSource() == btn_login) {
 
-            if (usernameRecognized(tf_login_username.getText())) {
-                Label warningLabel = new Label("User already found");
-                warningLabel.setTextFill(Color.color(1.0, 0.1, 0.1));
-                grid_login.add(warningLabel, 2, 3);
+            if (userNameManager.usernameRecognized(tf_login_username.getText())) {
                 System.out.println("Recognized: " + tf_login_username.getText());
             }
             else {
-                saveUserName(tf_login_username.getText());
+                userNameManager.saveUserName(tf_login_username.getText());
             }
 
             stage = (Stage) btn_login.getScene().getWindow();
@@ -105,50 +181,6 @@ public class Controller {
         Scene scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
-    }
-
-    private void saveUserName(String userName) throws IOException {
-        /* Saves string input to users.txt */
-        try {
-            FileWriter fileWriter = new FileWriter("users.txt", true);
-            fileWriter.write(userName + "\n");
-            fileWriter.close();
-        }
-        catch (IOException ioe) {
-            System.err.println("IOException: " + ioe.getMessage());
-        }
-
-    }
-
-
-    private boolean usernameRecognized(String userName) throws IOException {
-        /* Returns true if String username is in users.txt */
-        boolean result = false;
-        try {
-
-            File file = new File("users.txt");
-            Scanner scanner = new Scanner(file);
-
-            int lineNum = 0;
-            while (scanner.hasNextLine()) {
-                String line = scanner.nextLine();
-                if (line.contains(userName)) {
-                    result = true;
-                    return result;
-
-                }
-                lineNum++;
-
-            }
-
-        }
-        catch (IOException ioe) {
-            System.err.println("IOException: " + ioe.getMessage());
-            return result;
-        }
-
-        return result;
-
     }
 
 }

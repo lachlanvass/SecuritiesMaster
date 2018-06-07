@@ -8,9 +8,10 @@ import java.util.Random;
 
 public class RandomGraph {
 
-
+    public double [] MainDataSet;
     public LineChart<Number, Number> getGraph(boolean random, double[] dataSet)
     {
+        MainDataSet = dataSet;
         final NumberAxis xAxis = new NumberAxis();
         final NumberAxis yAxis = new NumberAxis();
         xAxis.setLabel("Number of month");
@@ -51,8 +52,12 @@ public class RandomGraph {
 
     }
 
-    private double[] importDataSet(double[] dataSet) {
+    private void getDataSet(double[] dataSet) {
+        MainDataSet = dataSet;
 
-        return dataSet;
+    }
+
+    public double[] ReturnData() {
+        return MainDataSet;
     }
 }
