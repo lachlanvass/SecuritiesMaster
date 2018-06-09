@@ -1,5 +1,8 @@
 package sample;
 
+import javafx.beans.Observable;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -7,7 +10,11 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.chart.Axis;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.ScatterChart;
+import javafx.scene.chart.XYChart;
+import javafx.scene.chart.XYChart.Series;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
@@ -16,9 +23,7 @@ import javafx.stage.Stage;
 import javax.json.*;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Random;
 
 public class Controller {
 
@@ -34,6 +39,8 @@ public class Controller {
     @FXML private Button btn_back;
     @FXML private TextField tf_login_username;
     @FXML private LineChart line_chart_main;
+
+    ArrayList<Number> FocusedData;
 
     private VBox vb_graphBox = new VBox();
     @FXML protected void handleStockSearch(ActionEvent action) {
@@ -53,80 +60,42 @@ public class Controller {
         System.out.println(event.getSource());
     }
 
-    private void populateMainLineChart(double[] MainChartData) {
+    private void populateMainLineChart(){
         // Populate the main line chart with data
         // Used in onMouseClicked event handlers for side line charts
 
         // remove chart from main grid - overwriting it
         // Otherwise draws new graph atop the old one.
+
+        StockChart stockChart = new StockChart(FocusedData);
+        stockChart.setMainChart();
         grid_main.getChildren().remove(line_chart_main);
-        RandomGraph randomGraph = new RandomGraph();
-        line_chart_main = randomGraph.getGraph(false, MainChartData);
+        line_chart_main = stockChart.getLineChartData();
+        grid_main.getChildren().remove(line_chart_main);
+
         grid_main.add(line_chart_main, 1, 5);
     }
 
     @FXML protected void spawnGraph (ActionEvent event) throws FileNotFoundException, IOException{
 
-        // Handle graph drawing events
-        dataSet[0] = 10;
-        dataSet[1] = 15;
-        dataSet[2] = 20;
-        dataSet[3] = 1;
-        dataSet[4] = 23;
-        dataSet[5] = 12;
+        AlphaVantageCSVReader AlphaCSV = new AlphaVantageCSVReader("stockData.csv", ",");
+        ArrayList<Number> openPriceData;
+        openPriceData = AlphaCSV.getVolume();
+        FocusedData = openPriceData;
 
-        ArrayList<Number> stockData = new ArrayList<Number>();
-        String csvFilePath = "stockData.csv";
-        BufferedReader br = null;
-        String line = "";
-        String separator = ",";
+        StockChart stockChart = new StockChart(openPriceData);
 
-        br = new BufferedReader(new FileReader(csvFilePath));
-        while ((line = br.readLine()) != null) {
+        LineChart chart = stockChart.getLineChartData();
 
-            // use comma as separator
-            String[] data = line.split(separator);
-            try {
-                float dataPoint = Float.valueOf(data[1]);
-                stockData.add(dataPoint);
-            }
-            catch (NumberFormatException nfe) {
-                System.out.println("Error: Not a number");
-            }
-        }
-
-        br.close();
-
-        for (Number f: stockData
-             ) {
-
-            System.out.println(f);
-
-        }
-
-        RandomGraph randomGraph = new RandomGraph();
-
-
-        LineChart chart;
-        if (tf_stock_searcher.getText().equals("SEC")){
-            chart = randomGraph.getGraph(false, dataSet);
-        }
-
-        else {
-            chart = randomGraph.getGraph(true, dataSet);
-        }
-        ArrayList<Number> chartData = new ArrayList<Number>();
-        //chartData = chart.getData().toArray();
-        chart.setMaxSize(LINE_CHART_SIZE, LINE_CHART_SIZE);
-        // Declare event so that when chart is clicked, the main chart assumes its data.
         chart.setOnMouseClicked(new EventHandler<javafx.scene.input.MouseEvent>() {
             @Override
             public void handle(javafx.scene.input.MouseEvent event) {
 
-               // populateMainLineChart();
+                populateMainLineChart();
             }
         });
-
+        //LineChart chart = new RandomGraph().getGraph(true, dataSet );
+        chart.setMaxSize(LINE_CHART_SIZE, LINE_CHART_SIZE);
 
         VBox vb_graphBox = new VBox();
         vb_graphBox.setSpacing(10);
@@ -137,19 +106,6 @@ public class Controller {
 
     }
 
-    protected void loadGraphsFromFile() {
-        RandomGraph randomGraph = new RandomGraph();
-
-        for (int i = 0; i < 4; i++) {
-            VBox vb_graphBox = new VBox();
-            vb_graphBox.setSpacing(10);
-            vb_graphBox.setPadding(new Insets(0, 20, 10, 20));
-            LineChart chart = randomGraph.getGraph(false, dataSet);
-            vb_graphBox.getChildren().add(chart);
-            grid_main.add(vb_graphBox, 0, graph_row_index);
-            graph_row_index++;
-        }
-    }
     @FXML
     protected void switchSceneButtonAction(ActionEvent event) throws IOException {
         /* This method demonstrates changing scenes and loading a new FXML file*/

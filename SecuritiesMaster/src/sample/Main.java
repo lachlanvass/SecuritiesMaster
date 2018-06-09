@@ -1,5 +1,4 @@
 package sample;
-import com.oracle.tools.packager.IOUtils;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -19,6 +18,7 @@ import java.io.InputStream;
 import java.net.URL;
 import org.json.*;
 import java.io.BufferedReader;
+import java.util.ArrayList;
 
 public class Main extends Application {
 
@@ -31,9 +31,6 @@ public class Main extends Application {
         stage = primaryStage;
 
         Scene scene = new Scene(root);
-
-        AlphaVantageCSVReader al = new AlphaVantageCSVReader("stockData.csv", ",");
-        al.printAllCSVLines();
         primaryStage.setScene(scene);
         primaryStage.show();
 

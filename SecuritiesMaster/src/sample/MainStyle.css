@@ -9,12 +9,6 @@
 
 }
 
-#chart {
-
-    -fx-opacity: 50%;
-
-}
-
 #ta_stock_ticker {
 
     -fx-alignment: "TOP_RIGHT";
@@ -26,3 +20,35 @@
     -fx-background-color: grey;
 
 }
+
+.chart {
+    -fx-background-color: black;
+    -fx-text-fill: white;
+}
+
+.chart-title {
+
+    -fx-text-fill: white;
+}
+.chart-series-line {
+    -fx-stroke-width: 2px;
+    -fx-effect: null;
+}
+
+.chart-content {
+    -fx-background-color: black;
+    -fx-text-fill: white;
+}
+
+.chart-legend-item{
+    -fx-text-fill: #191970;
+}
+
+.chart-plot-background {
+    -fx-background-color: black;
+}
+
+.chart-vertical-grid-lines {
+    -fx-stroke: rgba(100%, 100%, 100%, 30%);
+}
+

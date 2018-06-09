@@ -1,0 +1,11 @@
+.chart {
+
+    -fx-background-color: #191970;
+}
+
+.chart-series-line {
+
+    -fx-stroke-width: 2px;
+}
+
+.default

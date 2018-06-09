@@ -1,49 +1,207 @@
 package sample;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
+import java.util.ArrayList;
 
 public class AlphaVantageCSVReader extends CSVReader {
 
     private String FilePath;
     private String Separator;
-    public AlphaVantageCSVReader(String filePath, String separator) {
+    private BufferedReader bufferedReader;
+    public AlphaVantageCSVReader(String filePath, String separator) throws FileNotFoundException {
         FilePath = filePath;
         Separator = separator;
+        bufferedReader = getBufferedReader(this.FilePath);
     }
 
-    public void printAllCSVLines()throws FileNotFoundException, IOException {
-        BufferedReader br;
-        br = getBufferedReader(FilePath);
-
+    public void printAllCSVLines(boolean dataOnly)throws FileNotFoundException, IOException {
         String line = "";
-        while ((line = br.readLine()) != null) {
+
+        int lineCount = 0;
+        while ((line = this.bufferedReader.readLine()) != null) {
+            if (lineCount == 0 && dataOnly) {
+                // The first line of the CSV file is headers.
+                // Therefore skip this line if dataOnly == true
+                lineCount++;
+                continue;
+            }
             // While there are still lines to read in BufferedReader,
             // Print out the data from that line
             String[] data = line.split(this.Separator);
-            System.out.println(data);
+
+            lineCount++;
         }
 
 
     }
-}
 
-//    String csvFilePath = "stockData.csv";
-//    BufferedReader br = null;
-//    String line = "";
-//    String separator = ",";
-//
-//        br = new BufferedReader(new FileReader(csvFilePath));
-//                while ((line = br.readLine()) != null) {
-//
-//                // use comma as separator
-//                String[] data = line.split(separator);
-//                try {
-//                float dataPoint = Float.valueOf(data[1]);
-//                stockData.add(dataPoint);
-//                }
-//                catch (NumberFormatException nfe) {
-//                System.out.println("Error: Not a number");
-//                }
+    public ArrayList<String> getDates() throws IOException{
+        String line = "";
+        ArrayList<String> results = new ArrayList<>();
+        int lineCount = 0;
+        while ((line = this.bufferedReader.readLine()) != null) {
+            if (lineCount == 0) {
+                // The first line of the CSV file is headers.
+                // Therefore skip this line if dataOnly == true
+                lineCount++;
+                continue;
+            }
+            // While there are still lines to read in BufferedReader,
+            // Print out the data from that line
+            String[] data = line.split(this.Separator);
+            String[] dates = data[0].split(" ");
+            System.out.println(dates[0]);
+            results.add(dates[0]);
+
+            lineCount++;
+        }
+
+        return results;
+    }
+
+    public ArrayList<String> getTimes() throws IOException{
+        String line = "";
+        ArrayList<String> results = new ArrayList<>();
+        int lineCount = 0;
+        while ((line = this.bufferedReader.readLine()) != null) {
+            if (lineCount == 0) {
+                // The first line of the CSV file is headers.
+                // Therefore skip this line if dataOnly == true
+                lineCount++;
+                continue;
+            }
+            // While there are still lines to read in BufferedReader,
+            // Print out the data from that line
+            String[] data = line.split(this.Separator);
+            String[] dates = data[0].split(" ");
+
+            results.add(dates[1]);
+
+            lineCount++;
+        }
+
+        return results;
+    }
+
+    public ArrayList<Number> getOpenPrices() throws IOException{
+        String line = "";
+        ArrayList<Number> results = new ArrayList<>();
+        int lineCount = 0;
+        while ((line = this.bufferedReader.readLine()) != null) {
+            if (lineCount == 0) {
+                // The first line of the CSV file is headers.
+                // Therefore skip this line if dataOnly == true
+                lineCount++;
+                continue;
+            }
+            // While there are still lines to read in BufferedReader,
+            // Print out the data from that line
+            String[] data = line.split(this.Separator);
+            float result = Float.valueOf(data[1]);
+            results.add(result);
+
+            lineCount++;
+        }
+
+        return results;
+    }
+
+    public ArrayList<Number> getHighPrices() throws IOException {
+
+        String line = "";
+        ArrayList<Number> results = new ArrayList<>();
+        int lineCount = 0;
+        while ((line = this.bufferedReader.readLine()) != null) {
+            if (lineCount == 0) {
+                // The first line of the CSV file is headers.
+                // Therefore skip this line if dataOnly == true
+                lineCount++;
+                continue;
+            }
+            // While there are still lines to read in BufferedReader,
+            // Print out the data from that line
+            String[] data = line.split(this.Separator);
+            float result = Float.valueOf(data[2]);
+            results.add(result);
+
+            lineCount++;
+        }
+
+        return results;
+    }
+
+    public ArrayList<Number> getLowPrices() throws IOException {
+
+        String line = "";
+        ArrayList<Number> results = new ArrayList<>();
+        int lineCount = 0;
+        while ((line = this.bufferedReader.readLine()) != null) {
+            if (lineCount == 0) {
+                // The first line of the CSV file is headers.
+                // Therefore skip this line if dataOnly == true
+                lineCount++;
+                continue;
+            }
+            // While there are still lines to read in BufferedReader,
+            // Print out the data from that line
+            String[] data = line.split(this.Separator);
+            float result = Float.valueOf(data[1]);
+            results.add(result);
+
+            lineCount++;
+        }
+
+        return results;
+    }
+
+    public ArrayList<Number> getClosePrices() throws IOException {
+
+        String line = "";
+        ArrayList<Number> results = new ArrayList<>();
+        int lineCount = 0;
+        while ((line = this.bufferedReader.readLine()) != null) {
+            if (lineCount == 0) {
+                // The first line of the CSV file is headers.
+                // Therefore skip this line if dataOnly == true
+                lineCount++;
+                continue;
+            }
+            // While there are still lines to read in BufferedReader,
+            // Print out the data from that line
+            String[] data = line.split(this.Separator);
+            float result = Float.valueOf(data[1]);
+            results.add(result);
+
+            lineCount++;
+        }
+
+        return results;
+    }
+
+    public ArrayList<Number> getVolume() throws IOException {
+
+        String line = "";
+        ArrayList<Number> results = new ArrayList<>();
+        int lineCount = 0;
+        while ((line = this.bufferedReader.readLine()) != null) {
+            if (lineCount == 0) {
+                // The first line of the CSV file is headers.
+                // Therefore skip this line if dataOnly == true
+                lineCount++;
+                continue;
+            }
+
+            // While there are still lines to read in BufferedReader,
+            // Print out the data from that line
+            String[] data = line.split(this.Separator);
+            float result = Float.valueOf(data[5]);
+            results.add(result);
+
+            lineCount++;
+        }
+
+        return results;
+    }
+
+
+}
