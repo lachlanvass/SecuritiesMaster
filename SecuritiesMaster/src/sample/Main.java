@@ -4,21 +4,10 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import netscape.javascript.JSObject;
 
-import javax.json.Json;
-import javax.json.JsonArray;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.stream.JsonParser;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import org.json.*;
-import java.io.BufferedReader;
-import java.util.ArrayList;
+
+import sample.AlphaVantage.*;
 
 public class Main extends Application {
 
@@ -29,6 +18,17 @@ public class Main extends Application {
 
         Parent root = FXMLLoader.load(getClass().getResource(FXMLPath));
         stage = primaryStage;
+
+//        AlphaVantageQueryIntraDay aq = new AlphaVantageQueryIntraDay("MSFT", "demo", "1min");
+//       // System.out.println(aq.getQuery());
+//        //aq.submitQuery();
+//
+//        AlphaVantageQueryMonthly am = new AlphaVantageQueryMonthly("MSFT", "demo");
+//        aq.submitQuery();
+//
+//        AlphaVantageCSVReader reader = new AlphaVantageCSVReader("dataMSFT-TIME_SERIES_INTRADAY.csv", ",");
+//        reader.getClosePrices();
+        //am.submitQuery();
 
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);

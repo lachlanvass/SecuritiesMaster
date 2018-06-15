@@ -14,17 +14,22 @@
 
 <GridPane fx:id="grid_main" alignment="center" hgap="10" prefHeight="400.0" styleClass="root" vgap="10" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <children>
-      <TextField id="tf_stock_searcher" fx:id="tf_stock_searcher" prefWidth="300.0" promptText="Search..." GridPane.columnIndex="1" GridPane.columnSpan="1" GridPane.rowIndex="2">
-         <padding>
-            <Insets bottom="2.0" left="70.0" right="2.0" top="2.0" />
-         </padding></TextField>
-      <Button alignment="TOP_RIGHT" mnemonicParsing="false" onAction="#spawnGraph" text="Search" GridPane.columnIndex="4" GridPane.rowIndex="2" />
-      <Button fx:id="btn_back" alignment="TOP_LEFT" onAction="#switchSceneButtonAction" text="Back" GridPane.columnIndex="2" GridPane.rowIndex="2">
+
+      <Button alignment="TOP_RIGHT" mnemonicParsing="false" onAction="#spawnSideLineGraph" text="Search" GridPane.columnIndex="4" />
+      <Button fx:id="btn_back" alignment="TOP_LEFT" onAction="#switchSceneButtonAction" text="Back" GridPane.columnIndex="2">
          <GridPane.margin>
             <Insets />
-         </GridPane.margin></Button>
-      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1" />
-      <LineChart title="Main Chart" fx:id="line_chart_main" GridPane.columnIndex="1" GridPane.rowIndex="5" onMouseClicked="#mouseClickEventHandle">
+         </GridPane.margin>
+      </Button>
+      <VBox prefHeight="200.0" prefWidth="100.0" GridPane.columnIndex="1">
+         <children>
+            <TextField id="tf_stock_searcher" fx:id="tf_stock_searcher" prefWidth="300.0" promptText="Search...">
+               <padding>
+                  <Insets bottom="2.0" left="70.0" right="2.0" top="2.0" />
+               </padding>
+            </TextField>
+         </children></VBox>
+      <LineChart fx:id="line_chart_main" onMouseClicked="#mouseClickEventHandle" title="Main Chart" GridPane.columnIndex="1" GridPane.rowIndex="5">
         <xAxis>
           <CategoryAxis side="BOTTOM" />
         </xAxis>
