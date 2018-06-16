@@ -8,11 +8,10 @@ import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
-import javafx.scene.control.Button;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
 import sample.AlphaVantage.AlphaVantageCSVReader;
 import sample.AlphaVantage.AlphaVantageQueryMonthly;
@@ -33,11 +32,14 @@ public class Controller {
 
     ArrayList<LineChart> Charts = new ArrayList<>();
     @FXML private GridPane grid_login;
-    @FXML private GridPane grid_main;
+    @FXML private BorderPane grid_main;
     @FXML private Button btn_login;
     @FXML private Button btn_back;
     @FXML private TextField tf_login_username;
     @FXML private LineChart line_chart_main;
+    @FXML private HBox hbox_search_section;
+    @FXML private Label lbl_warning;
+    @FXML private ToggleGroup searchBarRadios;
 
 
     ArrayList<Number> FocusedData;
@@ -50,7 +52,6 @@ public class Controller {
     }
 
     private String getStockSearcherValue(ActionEvent event) {
-
         String result = tf_stock_searcher.getText();
         return result;
 
@@ -69,82 +70,126 @@ public class Controller {
     }
 
     private void spawnMainLineChart(String chartName, String xAxisLabel,
-                                    String yAxisLabel){
+                                    String yAxisLabel, ArrayList<Number> dataSet){
 
+        // TODO add checkboxes to control what data to look at
+
+        //TODO add way to save graphs to users and load them in
         // Configure chart
         MainStockChart mainChart = new MainStockChart(FocusedData);
         mainChart.setXAxisLabel(xAxisLabel);
         mainChart.setYAxisLabel(yAxisLabel);
         mainChart.setChartName(chartName);
+        mainChart.setMainDataSet(dataSet);
 
         // remove chart from main grid - overwriting it
         // Otherwise draws new graph atop the old one.
         grid_main.getChildren().remove(line_chart_main);
         line_chart_main = mainChart.getLineChartData();
         grid_main.getChildren().remove(line_chart_main);
-        grid_main.add(line_chart_main, 2, 3);
+        grid_main.setCenter(line_chart_main);
     }
 
     @FXML protected void spawnSideLineGraph (ActionEvent event) throws IOException{
 
         String searchInput = tf_stock_searcher.getText();
+        Object selection = searchBarRadios.getSelectedToggle().getUserData();
+        RadioButton selectedRadioButton = (RadioButton) searchBarRadios.getSelectedToggle();
+        String selectedRadioButtonString = selectedRadioButton.getText();
+        System.out.println(selectedRadioButtonString);
+
         AlphaVantageQueryMonthly avQuery = new AlphaVantageQueryMonthly(searchInput, "UZWQWLMCV2TNGH7T");
         avQuery.submitQuery();
 
-        AlphaVantageCSVReader AlphaCSV = new AlphaVantageCSVReader(avQuery.fileName, ",");
-        ArrayList<Number> volumeData;
-        volumeData = AlphaCSV.getVolume();
-        FocusedData = volumeData;
+        lbl_warning.setVisible(false);
 
-        // Give the side stock chart all relevant information
-        // So that when clicked it can be loaded from each instance
-        // And given to the Main stock chart
-        SideMenuStockChart sideMenuChart = new SideMenuStockChart(FocusedData);
-        sideMenuChart.setChartName(avQuery.getSymbolInput());
-        sideMenuChart.setXAxisLabel(avQuery.getIntervalString());
-        sideMenuChart.setYAxisLabel(AlphaCSV.getMeasurementType());
 
-        LineChart chart = sideMenuChart.getLineChartData();
-        Charts.add(chart);
 
-        chart.setOnMouseClicked(new EventHandler<javafx.scene.input.MouseEvent>() {
-            @Override
-            public void handle(javafx.scene.input.MouseEvent event) {
+        try {
+            // If search bar empty
+            AlphaVantageCSVReader AlphaCSV = new AlphaVantageCSVReader(avQuery.fileName, ",");
+            ArrayList<Number> stockData;
 
-                spawnMainLineChart(
-                        sideMenuChart.getChartName(),
-                        sideMenuChart.getXAxisLabel(),
-                        sideMenuChart.getYAxisLabel()
-                );
+            // TODO feature: make it so that when main graph present, switching toggle changes data displayed
+                // Therefore must be able to load all data for a graph and switch on the fly
+                // Radio buttons must know which stock data is there.
+                // Write custom Radiobutton class that takes a stock chart as input?
+            switch (selectedRadioButtonString) {
+                case "Open"     : stockData = AlphaCSV.getOpenPrices();
+                                    FocusedData = stockData;
+                                    break;
+                case "Close"    : stockData = AlphaCSV.getClosePrices();
+                                    FocusedData = stockData;
+                                    break;
+                case "High"     : stockData = AlphaCSV.getHighPrices();
+                                    FocusedData = stockData;
+                                    break;
+                case "Low"      : stockData = AlphaCSV.getLowPrices();
+                                    FocusedData = stockData;
+                                    break;
+                case "Volume"   : stockData = AlphaCSV.getVolume();
+                                    FocusedData = stockData;
+                                    break;
             }
-        });
-        //LineChart chart = new RandomGraph().getGraph(true, dataSet );
-        chart.setMaxSize(LINE_CHART_SIZE, LINE_CHART_SIZE);
 
-        /*
-         * ScrollPane can only contain 1 node. So must use a VBox which will dynamically load
-         * in more charts. This is done by adding the charts to an ArrayList and adding them all
-         * with each call of this method
-          * */
-        ScrollPane scrollPane = new ScrollPane();
+            // Give the side stock chart all relevant information
+            // So that when clicked it can be loaded from each instance
+            // And given to the Main stock chart
+            SideMenuStockChart sideMenuChart = new SideMenuStockChart(FocusedData);
+            sideMenuChart.setChartName(avQuery.getSymbolInput());
+            sideMenuChart.setXAxisLabel(avQuery.getIntervalString());
+            sideMenuChart.setYAxisLabel(AlphaCSV.getMeasurementType());
 
-        VBox vb_graphBox = new VBox();
-        vb_graphBox.setSpacing(10);
+            LineChart chart = sideMenuChart.getLineChartData();
+            Charts.add(chart);
 
-        // Dynamically add charts to vBox
-        for (LineChart lineChart : Charts) {
-            vb_graphBox.getChildren().add(0, lineChart);
+            chart.setOnMouseClicked(new EventHandler<javafx.scene.input.MouseEvent>() {
+                @Override
+                public void handle(javafx.scene.input.MouseEvent event) {
+
+                    spawnMainLineChart(
+                            sideMenuChart.getChartName(),
+                            sideMenuChart.getXAxisLabel(),
+                            sideMenuChart.getYAxisLabel(),
+                            sideMenuChart.getMainDataSet()
+                    );
+                }
+            });
+            //LineChart chart = new RandomGraph().getGraph(true, dataSet );
+            chart.setMaxSize(LINE_CHART_SIZE, LINE_CHART_SIZE);
+
+            /*
+             * ScrollPane can only contain 1 node. So must use a VBox which will dynamically load
+             * in more charts. This is done by adding the charts to an ArrayList and adding them all
+             * with each call of this method
+             * */
+            ScrollPane scrollPane = new ScrollPane();
+
+            VBox vb_graphBox = new VBox();
+            vb_graphBox.setSpacing(10);
+
+            // Dynamically add charts to vBox
+            for (LineChart lineChart : Charts) {
+                vb_graphBox.getChildren().add(0, lineChart);
+            }
+            vb_graphBox.setPadding(new Insets(10));
+
+            scrollPane.setContent(vb_graphBox);
+            scrollPane.setPannable(true);
+            grid_main.setLeft(scrollPane);
+
         }
-        vb_graphBox.setPadding(new Insets(10));
+        catch (ArrayIndexOutOfBoundsException e) {
 
-        scrollPane.setContent(vb_graphBox);
-        scrollPane.setPannable(true);
-        grid_main.getChildren().add(scrollPane);
+            // TODO This is pretty slow. Alternative to try-catch? if-else?
+            lbl_warning.setVisible(true);
+        }
 
     }
     @FXML protected void deleteGraph(ActionEvent event) {
         Charts.remove(0);
     }
+
     @FXML
     protected void switchSceneButtonAction(ActionEvent event) throws IOException {
         /* This method demonstrates changing scenes and loading a new FXML file*/

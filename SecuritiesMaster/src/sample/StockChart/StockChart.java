@@ -3,7 +3,9 @@ package sample.StockChart;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
+import sample.Main;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -16,10 +18,8 @@ public class StockChart {
     protected float DATA_RANGE;
     public String ChartName;
 
-
     protected String XAxisLabel;
     protected String YAxisLabel;
-
     protected String MeasurementType;
 
     public StockChart(ArrayList<Number> dataSet) {
@@ -32,6 +32,20 @@ public class StockChart {
     }
 
     public StockChart() { /* Default constructor */ }
+
+    protected void rescaleAxes() {
+        Y_AXIS_UBOUND = getDataSetMax(MainDataSet);
+        Y_AXIS_LBOUND = getDataSetMin(MainDataSet);
+        DATA_RANGE = Y_AXIS_UBOUND.floatValue() - Y_AXIS_LBOUND.floatValue();
+    }
+    public ArrayList<Number> getMainDataSet() {
+        return MainDataSet;
+    }
+
+    public void setMainDataSet(ArrayList<Number> dataSet) {
+        this.MainDataSet = dataSet;
+        rescaleAxes();
+    }
 
     protected Number getDataSetMax(ArrayList<Number> dataSet) {
 
@@ -81,3 +95,5 @@ public class StockChart {
     }
 
 }
+
+

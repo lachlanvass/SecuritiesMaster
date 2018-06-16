@@ -16,11 +16,14 @@ public class AlphaVantageCSVReader extends CSVReader {
     }
 
     protected String measurementType = "";
+
     public AlphaVantageCSVReader(String filePath, String separator) throws FileNotFoundException {
         FilePath = filePath;
         Separator = separator;
         bufferedReader = getBufferedReader(this.FilePath);
     }
+
+    public AlphaVantageCSVReader() { }
 
     public void printAllCSVLines(boolean dataOnly)throws IOException {
         String line = "";
