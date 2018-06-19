@@ -16,9 +16,9 @@ public class AlphaVantageQuery {
     protected String APIKeyInput;
     protected String intervalString;
     protected ArrayList<String> QueryInputs = new ArrayList<>();
-
     protected ArrayList<String> QueryParts = new ArrayList<>();
     public String fileName;
+
     public AlphaVantageQuery(String queryFunction, String symbol,
                                 String apiKey) {
 
@@ -100,13 +100,14 @@ public class AlphaVantageQuery {
         String query = getQuery();
         InputStream inputStream = new URL(query).openStream();
         Scanner inputScanner = new Scanner(inputStream);
+        String fileNameBase = "StockData\\";
 
-        fileName = "data"
+        this.fileName = fileNameBase + "data"
                 + this.SymbolInput + "-"
                 + this.QueryFunctionInput
                 + ".csv";
 
-        FileWriter fileWriter = new FileWriter(fileName, false);
+        FileWriter fileWriter = new FileWriter(this.fileName, false);
 
         // TODO catch potential exception non existent resource
         while (inputScanner.hasNext()) {

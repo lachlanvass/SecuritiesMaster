@@ -27,7 +27,6 @@ public class AlphaVantageCSVReader extends CSVReader {
 
     public void printAllCSVLines(boolean dataOnly)throws IOException {
         String line = "";
-
         int lineCount = 0;
         while ((line = this.bufferedReader.readLine()) != null) {
             if (lineCount == 0 && dataOnly) {

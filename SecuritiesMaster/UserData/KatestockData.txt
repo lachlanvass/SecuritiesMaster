@@ -1,0 +1,9 @@
+
+StockData\dataGOOG-TIME_SERIES_MONTHLY.csv
+StockData\dataAAPL-TIME_SERIES_DAILY.csv
+StockData\dataIBM-TIME_SERIES_WEEKLY.csv
+StockData\dataGOOG-TIME_SERIES_INTRADAY.csv
+StockData\dataMSFT-TIME_SERIES_DAILY.csv
+StockData\dataDDD-TIME_SERIES_MONTHLY.csv
+StockData\dataAAPL-TIME_SERIES_MONTHLY.csv
+StockData\dataAAPL-TIME_SERIES_WEEKLY.csv

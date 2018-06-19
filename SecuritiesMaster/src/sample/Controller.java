@@ -10,11 +10,8 @@ import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.stage.Stage;
-import sample.AlphaVantage.AlphaVantageCSVReader;
-import sample.AlphaVantage.AlphaVantageQueryMonthly;
+import sample.AlphaVantage.*;
 import sample.StockChart.MainStockChart;
 import sample.StockChart.SideMenuStockChart;
 
@@ -39,7 +36,12 @@ public class Controller {
     @FXML private LineChart line_chart_main;
     @FXML private HBox hbox_search_section;
     @FXML private Label lbl_warning;
-    @FXML private ToggleGroup searchBarRadios;
+    @FXML private ToggleGroup radioGroup_DateType;
+    @FXML private ToggleGroup radioGroup_timeFrame;
+    private String currentUser;
+    private UserNameManager userNameManager = new UserNameManager();
+    private ArrayList<String> currentUserStockDataFiles = new ArrayList<>();
+    private boolean newUser;
 
 
     ArrayList<Number> FocusedData;
@@ -93,17 +95,36 @@ public class Controller {
     @FXML protected void spawnSideLineGraph (ActionEvent event) throws IOException{
 
         String searchInput = tf_stock_searcher.getText();
-        Object selection = searchBarRadios.getSelectedToggle().getUserData();
-        RadioButton selectedRadioButton = (RadioButton) searchBarRadios.getSelectedToggle();
+        String apiKey = "UZWQWLMCV2TNGH7T";
+        // Detect the selected radio button
+        RadioButton selectedRadioButton = (RadioButton) radioGroup_DateType.getSelectedToggle();
         String selectedRadioButtonString = selectedRadioButton.getText();
-        System.out.println(selectedRadioButtonString);
 
-        AlphaVantageQueryMonthly avQuery = new AlphaVantageQueryMonthly(searchInput, "UZWQWLMCV2TNGH7T");
+        RadioButton selectedTimeFrameButton = (RadioButton) radioGroup_timeFrame.getSelectedToggle();
+        String selectedTimeFrameString = selectedTimeFrameButton.getText();
+
+        // Change query depending on time frame button selected.
+        AlphaVantageQuery avQuery = new AlphaVantageQuery();
+        switch (selectedTimeFrameString) {
+
+            case "Intraday"     : avQuery = new AlphaVantageQueryIntraDay(searchInput, apiKey, "10min");
+                                    break;
+            case "Daily"        : avQuery = new AlphaVantageQueryDaily(searchInput, apiKey);
+                                    break;
+            case "Weekly"       : avQuery = new AlphaVantageQueryWeekly(searchInput, apiKey);
+                                    break;
+            case "Monthly"      : avQuery = new AlphaVantageQueryMonthly(searchInput, apiKey);
+                                    break;
+        }
+
         avQuery.submitQuery();
+        if (!userNameManager.getStockDataFiles(userNameManager.getUser()).contains(avQuery.fileName)) {
+
+            // If this query is for data which is not already stored, append it to the users stock data file.
+            userNameManager.appendStockDataFile(userNameManager.getUser(), avQuery.fileName);
+        }
 
         lbl_warning.setVisible(false);
-
-
 
         try {
             // If search bar empty
@@ -190,6 +211,8 @@ public class Controller {
         Charts.remove(0);
     }
 
+    @FXML protected void testCurrentUser(ActionEvent event) { System.out.println(userNameManager.getUser());}
+
     @FXML
     protected void switchSceneButtonAction(ActionEvent event) throws IOException {
         /* This method demonstrates changing scenes and loading a new FXML file*/
@@ -197,17 +220,29 @@ public class Controller {
 
         Stage stage;
         Parent root;
-        UserNameManager userNameManager = new UserNameManager();
         // Two different buttons in two different fxml files call this method
         // Therefore must use the references declared at the beginning of the class
 
         if (event.getSource() == btn_login) {
 
             if (userNameManager.usernameRecognized(tf_login_username.getText())) {
+                // Set current user to username input
+
+                // Save username from the login screen
+                currentUser = tf_login_username.getText();
+                userNameManager.setUser(tf_login_username.getText());
+                currentUserStockDataFiles = userNameManager.getStockDataFiles(userNameManager.getUser());
+                newUser = false;
+
                 System.out.println("Recognized: " + tf_login_username.getText());
+                System.out.println("current user = " + currentUser);
             }
             else {
+                // save username and set it to current user
                 userNameManager.saveUserName(tf_login_username.getText());
+                currentUser = tf_login_username.getText();
+                userNameManager.setUser(tf_login_username.getText());
+                newUser = true;
             }
 
             stage = (Stage) btn_login.getScene().getWindow();

@@ -21,7 +21,7 @@ public class CSVReader {
         return this.FilePath;
     }
 
-    public BufferedReader getBufferedReader(String fileReaderFilePath) throws FileNotFoundException {
+    protected BufferedReader getBufferedReader(String fileReaderFilePath) throws FileNotFoundException {
         BufferedReader br;
         FileReader csvFileReader = new FileReader(fileReaderFilePath);
         br = new BufferedReader(csvFileReader);

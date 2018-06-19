@@ -14,6 +14,8 @@ public class AlphaVantageQueryIntraDay extends AlphaVantageQuery {
                 "&interval=");
         QueryInputs.add(2, interval);
 
+        intervalString = interval;
+
     }
 
 }
