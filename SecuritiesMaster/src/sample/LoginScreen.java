@@ -20,8 +20,6 @@ public class LoginScreen extends GridPane {
         grid.add(txt_user_name, 1, 1);
 
 
-
-
     }
 
 }

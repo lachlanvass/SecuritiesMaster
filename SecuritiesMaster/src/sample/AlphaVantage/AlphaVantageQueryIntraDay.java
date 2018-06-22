@@ -13,8 +13,9 @@ public class AlphaVantageQueryIntraDay extends AlphaVantageQuery {
         QueryParts.add(2,
                 "&interval=");
         QueryInputs.add(2, interval);
-
         intervalString = interval;
+        String query = buildQuery();
+        System.out.println(query);
 
     }
 

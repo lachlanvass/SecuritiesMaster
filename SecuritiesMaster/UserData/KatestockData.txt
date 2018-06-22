@@ -1,4 +1,3 @@
-
 StockData\dataGOOG-TIME_SERIES_MONTHLY.csv
 StockData\dataAAPL-TIME_SERIES_DAILY.csv
 StockData\dataIBM-TIME_SERIES_WEEKLY.csv

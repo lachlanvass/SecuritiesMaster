@@ -15,8 +15,12 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 
-<BorderPane fx:id="grid_main" prefHeight="500.0" prefWidth="500.0" styleClass="root" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+<?import javafx.geometry.Insets?>
+<BorderPane fx:id="border_main" prefHeight="500.0" prefWidth="500.0" styleClass="root" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
 
+    <padding>
+        <Insets bottom="10" left="10" right="10" top="10" />
+    </padding>
     <center>
 
         <LineChart fx:id="line_chart_main" onMouseClicked="#mouseClickEventHandle" title="Main Chart">
@@ -49,6 +53,7 @@
 
                <children>
 
+                   <Button GridPane.columnIndex="0" GridPane.rowIndex="1" text="Load user data" onAction="#spawnRecognizedUserSideGraphs" />
                    <!-- SEARCH BAR AND BUTTONS -->
                    <Button alignment="TOP_RIGHT" mnemonicParsing="false" onAction="#spawnSideLineGraph" text="Search" GridPane.columnIndex="2" />
                    <TextField id="tf_stock_searcher" fx:id="tf_stock_searcher" prefWidth="200.0" promptText="Search..." GridPane.columnIndex="1" />

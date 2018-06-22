@@ -12,6 +12,8 @@ public class UserNameManager {
     // TODO ensure file paths work across platforms
     private static String currentUser = new String();
     private String userscsvPath = "UserData\\users.csv";
+
+    private ArrayList<String> stockDataFilePaths = new ArrayList<>();
     public void saveUserName(String userName) throws IOException {
         /* User data for each user consists of a name and a pointer to a txt file.
             The txt files defines stock data which the user has saved
@@ -58,6 +60,27 @@ public class UserNameManager {
 
     public ArrayList<String> getStockDataFiles(String userName) {
         ArrayList<String> result = new ArrayList<>();
+
+        try {
+            FileReader fileReader = new FileReader("UserData\\" + getStockDataFileName(userName));
+
+            Scanner scanner = new Scanner(fileReader);
+            while (scanner.hasNextLine()) {
+                String line = scanner.nextLine();
+                result.add(line);
+            }
+            fileReader.close();
+        }
+        catch (IOException ioe) {
+            System.err.println("IOException: " + ioe.getMessage());
+        }
+
+        return result;
+    }
+
+    public ArrayList<String> getStockDataFiles() {
+        ArrayList<String> result = new ArrayList<>();
+        String userName = this.currentUser;
 
         try {
             FileReader fileReader = new FileReader("UserData\\" + getStockDataFileName(userName));
@@ -140,5 +163,17 @@ public class UserNameManager {
 
     public String getUser() {
         return this.currentUser;
+    }
+
+    public ArrayList<String> getStockDataFilePaths() {
+        return stockDataFilePaths;
+    }
+
+    public void setStockDataFilePaths(ArrayList<String> stockDataFilePaths) {
+        this.stockDataFilePaths = stockDataFilePaths;
+    }
+
+    public void appendToStockDataFilePaths(String filePath) {
+        this.stockDataFilePaths.add(filePath);
     }
 }

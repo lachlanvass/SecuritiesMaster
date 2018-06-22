@@ -31,6 +31,7 @@ public class AlphaVantageQuery {
         String query = buildQuery();
     }
 
+
     public AlphaVantageQuery() { /* default constructor */ }
 
     protected void populateQueryInputs() {

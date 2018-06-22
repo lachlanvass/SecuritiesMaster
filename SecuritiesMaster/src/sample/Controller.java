@@ -21,43 +21,21 @@ import java.util.ArrayList;
 public class Controller {
 
     double LINE_CHART_SIZE = 0.2;
-    byte graph_row_index = 0;
     @FXML private TextField tf_stock_searcher;
-
-    private double[] dataSet = new double[6];
-    boolean scrollBarGenerated = false;
-
     ArrayList<LineChart> Charts = new ArrayList<>();
-    @FXML private GridPane grid_login;
-    @FXML private BorderPane grid_main;
+    @FXML private BorderPane border_main;
     @FXML private Button btn_login;
     @FXML private Button btn_back;
     @FXML private TextField tf_login_username;
     @FXML private LineChart line_chart_main;
-    @FXML private HBox hbox_search_section;
     @FXML private Label lbl_warning;
     @FXML private ToggleGroup radioGroup_DateType;
     @FXML private ToggleGroup radioGroup_timeFrame;
-    private String currentUser;
-    private UserNameManager userNameManager = new UserNameManager();
-    private ArrayList<String> currentUserStockDataFiles = new ArrayList<>();
-    private boolean newUser;
+    final private UserNameManager userNameManager = new UserNameManager();
+    @FXML private ArrayList<String> currentUserStockDataFiles = new ArrayList<>();
 
 
     ArrayList<Number> FocusedData;
-
-    private VBox vb_graphBox = new VBox();
-    @FXML protected void handleStockSearch(ActionEvent action) {
-
-        System.out.println(tf_stock_searcher.getText());
-
-    }
-
-    private String getStockSearcherValue(ActionEvent event) {
-        String result = tf_stock_searcher.getText();
-        return result;
-
-    }
 
     @FXML protected void mouseClickEventHandle(javafx.scene.input.MouseEvent event) {
         System.out.println(event.getSource());
@@ -86,10 +64,10 @@ public class Controller {
 
         // remove chart from main grid - overwriting it
         // Otherwise draws new graph atop the old one.
-        grid_main.getChildren().remove(line_chart_main);
+        border_main.getChildren().remove(line_chart_main);
         line_chart_main = mainChart.getLineChartData();
-        grid_main.getChildren().remove(line_chart_main);
-        grid_main.setCenter(line_chart_main);
+        border_main.getChildren().remove(line_chart_main);
+        border_main.setCenter(line_chart_main);
     }
 
     @FXML protected void spawnSideLineGraph (ActionEvent event) throws IOException{
@@ -107,7 +85,7 @@ public class Controller {
         AlphaVantageQuery avQuery = new AlphaVantageQuery();
         switch (selectedTimeFrameString) {
 
-            case "Intraday"     : avQuery = new AlphaVantageQueryIntraDay(searchInput, apiKey, "10min");
+            case "Intraday"     : avQuery = new AlphaVantageQueryIntraDay(searchInput, apiKey, "30min");
                                     break;
             case "Daily"        : avQuery = new AlphaVantageQueryDaily(searchInput, apiKey);
                                     break;
@@ -162,6 +140,7 @@ public class Controller {
             sideMenuChart.setYAxisLabel(AlphaCSV.getMeasurementType());
 
             LineChart chart = sideMenuChart.getLineChartData();
+            System.out.println("Before adding chart to Charts");
             Charts.add(chart);
 
             chart.setOnMouseClicked(new EventHandler<javafx.scene.input.MouseEvent>() {
@@ -197,11 +176,143 @@ public class Controller {
 
             scrollPane.setContent(vb_graphBox);
             scrollPane.setPannable(true);
-            grid_main.setLeft(scrollPane);
+            border_main.setLeft(scrollPane);
 
         }
         catch (ArrayIndexOutOfBoundsException e) {
 
+            // TODO This is pretty slow. Alternative to try-catch? if-else?
+            lbl_warning.setVisible(true);
+        }
+
+    }
+
+    private ArrayList<String> getStockDataFiles() {
+        ArrayList<String> userStockDataFiles = userNameManager.getStockDataFiles();
+        ArrayList<String> result = new ArrayList<>();
+        for (String stockDataFileString : userStockDataFiles) {
+            // Use REGEX to get query parts
+            // Change file name format to make splitting easier?
+
+            // Remove prefix
+            stockDataFileString = stockDataFileString.replace("StockData\\data", "");
+            stockDataFileString = stockDataFileString.replace("-TIME_SERIES_", " ");
+            stockDataFileString = stockDataFileString.replace(".csv", "");
+
+            String[] st = stockDataFileString.split("\\s+", 15);
+
+            String symbolName = st[0];
+            String timePeriod = st[st.length - 1];
+            String completeFilePath = "StockData\\data" + symbolName + "-TIME_SERIES_" + timePeriod + ".csv";
+            result.add(completeFilePath);
+        }
+
+        return result;
+    }
+    private void resolveStockDataFiles() throws IOException{
+        String apiKey = "UZWQWLMCV2TNGH7T";
+        // Get user name
+        // Need to get a list of files the user has
+        ArrayList<String> userStockDataFiles = userNameManager.getStockDataFiles();
+        ArrayList<String> temp = new ArrayList<>();
+        for (String stockDataFileString : userStockDataFiles) {
+            // Use REGEX to get query parts
+            // Change file name format to make splitting easier?
+
+            // Remove prefix
+            stockDataFileString = stockDataFileString.replace("StockData\\data", "");
+            stockDataFileString = stockDataFileString.replace("-TIME_SERIES_", " ");
+            stockDataFileString = stockDataFileString.replace(".csv", "");
+
+            String[] st = stockDataFileString.split("\\s+", 15);
+
+            String symbolName = st[0];
+            String timePeriod = st[st.length - 1];
+            String completeFilePath = "StockData\\data" + symbolName + "-TIME_SERIES_" + timePeriod + ".csv";
+
+            // Populate list of files for use to draw them to side stock chart bar
+
+            AlphaVantageQuery avQuery = new AlphaVantageQuery();
+            if (timePeriod != null) {
+
+
+                switch (timePeriod) {
+
+                    case "INTRADAY":
+                        avQuery = new AlphaVantageQueryIntraDay(symbolName, apiKey, "30min");
+                        break;
+                    case "DAILY":
+                        avQuery = new AlphaVantageQueryDaily(symbolName, apiKey);
+                        break;
+                    case "WEEKLY":
+                        avQuery = new AlphaVantageQueryWeekly(symbolName, apiKey);
+                        break;
+                    case "MONTHLY":
+                        avQuery = new AlphaVantageQueryMonthly(symbolName, apiKey);
+                        break;
+                }
+            }
+
+            avQuery.submitQuery();
+
+        }
+
+        //return temp;
+    }
+
+    @FXML protected void spawnRecognizedUserSideGraphs(ActionEvent event) throws IOException {
+
+        // TODO in order to enable this to work, see need a function to ensure that the stock data files in each
+        // TODO user txt file, actually exist in the stock data files.
+
+        ArrayList<String> filePaths = getStockDataFiles();
+        try {
+            for (String stockDataFilePath : filePaths) {
+                AlphaVantageCSVReader AlphaCSV = new AlphaVantageCSVReader(stockDataFilePath, ",");
+
+                // TODO find a way to repord what type of data we want. Or a way to switch between data easily on a graph
+                FocusedData = AlphaCSV.getVolume();
+
+                SideMenuStockChart sideMenuChart = new SideMenuStockChart(FocusedData);
+                sideMenuChart.setChartName("test");
+                sideMenuChart.setXAxisLabel("test");
+                LineChart chart = sideMenuChart.getLineChartData();
+                Charts.add(chart);
+
+                chart.setOnMouseClicked(new EventHandler<javafx.scene.input.MouseEvent>() {
+                    @Override
+                    public void handle(javafx.scene.input.MouseEvent event) {
+
+                        spawnMainLineChart(
+                                sideMenuChart.getChartName(),
+                                sideMenuChart.getXAxisLabel(),
+                                sideMenuChart.getYAxisLabel(),
+                                sideMenuChart.getMainDataSet()
+                        );
+                    }
+                });
+                chart.setMaxSize(LINE_CHART_SIZE, LINE_CHART_SIZE);
+
+                ScrollPane scrollPane = new ScrollPane();
+
+                VBox vb_graphBox = new VBox();
+                vb_graphBox.setSpacing(10);
+
+                // Dynamically add charts to vBox
+                for (LineChart lineChart : Charts) {
+                    vb_graphBox.getChildren().add(0, lineChart);
+                }
+
+                vb_graphBox.setPadding(new Insets(10));
+
+                scrollPane.setContent(vb_graphBox);
+                scrollPane.setPannable(true);
+                border_main.setLeft(scrollPane);
+            }
+
+        }
+        catch (ArrayIndexOutOfBoundsException e) {
+            System.out.println("Caught");
             // TODO This is pretty slow. Alternative to try-catch? if-else?
             lbl_warning.setVisible(true);
         }
@@ -229,26 +340,22 @@ public class Controller {
                 // Set current user to username input
 
                 // Save username from the login screen
-                currentUser = tf_login_username.getText();
                 userNameManager.setUser(tf_login_username.getText());
-                currentUserStockDataFiles = userNameManager.getStockDataFiles(userNameManager.getUser());
-                newUser = false;
+                resolveStockDataFiles();
 
-                System.out.println("Recognized: " + tf_login_username.getText());
-                System.out.println("current user = " + currentUser);
             }
             else {
                 // save username and set it to current user
                 userNameManager.saveUserName(tf_login_username.getText());
-                currentUser = tf_login_username.getText();
                 userNameManager.setUser(tf_login_username.getText());
-                newUser = true;
             }
 
+            // Enter main screen
             stage = (Stage) btn_login.getScene().getWindow();
             root = FXMLLoader.load(getClass().getResource("sample.fxml"));
         }
         else {
+            // Got back to login screen
             stage = (Stage) btn_back.getScene().getWindow();
             root = FXMLLoader.load(getClass().getResource("login.fxml"));
         }
@@ -257,5 +364,7 @@ public class Controller {
         stage.setScene(scene);
         stage.show();
     }
+
+
 
 }

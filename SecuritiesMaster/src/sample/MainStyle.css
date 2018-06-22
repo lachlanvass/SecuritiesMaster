@@ -37,11 +37,16 @@
 
 .chart-content {
     -fx-background-color: black;
-    -fx-text-fill: white;
+    -fx-text-fill: grey;
 }
 
 .chart-legend-item{
     -fx-text-fill: #191970;
+}
+
+.axis-label {
+
+    -fx-text-fill: white;
 }
 
 .chart-plot-background {
@@ -49,6 +54,6 @@
 }
 
 .chart-vertical-grid-lines {
-    -fx-stroke: rgba(100%, 100%, 100%, 30%);
+    -fx-stroke-color: rgba(100%, 100%, 100%, 30%);
 }
 
