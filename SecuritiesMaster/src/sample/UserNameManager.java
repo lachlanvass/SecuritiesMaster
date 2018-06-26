@@ -13,7 +13,7 @@ public class UserNameManager {
     private static String currentUser = new String();
     private String userscsvPath = "UserData\\users.csv";
 
-    private ArrayList<String> stockDataFilePaths = new ArrayList<>();
+    public ArrayList<String> stockDataFilePaths = new ArrayList<>();
     public void saveUserName(String userName) throws IOException {
         /* User data for each user consists of a name and a pointer to a txt file.
             The txt files defines stock data which the user has saved

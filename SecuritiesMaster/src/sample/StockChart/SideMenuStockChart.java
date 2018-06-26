@@ -69,4 +69,6 @@ public class SideMenuStockChart extends StockChart {
 
     }
 
+
+
 }

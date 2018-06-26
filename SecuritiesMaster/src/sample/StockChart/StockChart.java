@@ -21,7 +21,7 @@ public class StockChart {
     protected String XAxisLabel;
     protected String YAxisLabel;
     protected String MeasurementType;
-
+    protected String filePath;
     public StockChart(ArrayList<Number> dataSet) {
         MainDataSet = dataSet;
 
