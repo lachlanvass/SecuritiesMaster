@@ -45,7 +45,6 @@ public class UserNameManager {
 
     public void appendStockDataFile(String userName, String inputFileName) throws IOException {
 
-        if (!usernameRecognized(userName)) {
             try {
                 FileWriter fileWriter = new FileWriter("UserData\\" + getStockDataFileName(userName), true);
                 fileWriter.write(inputFileName + "\n");
@@ -56,7 +55,7 @@ public class UserNameManager {
             }
         }
 
-    }
+
 
     public ArrayList<String> getStockDataFiles(String userName) {
         ArrayList<String> result = new ArrayList<>();

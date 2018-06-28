@@ -1,9 +1,6 @@
 package sample;
 
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -15,527 +12,282 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import sample.AlphaVantage.*;
-import sample.StockChart.LineChartWithButton;
 import sample.StockChart.MainStockChart;
 import sample.StockChart.SideMenuStockChart;
+import sample.StockChart.StockChart;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.concurrent.Callable;
 
 public class Controller {
 
-    double LINE_CHART_SIZE = 0.2;
+    /* FXML UI COMPONENT REFERENCES */
     @FXML private TextField tf_stock_searcher;
-    ArrayList<LineChart> Charts = new ArrayList<>();
     @FXML private BorderPane border_main;
     @FXML private Button btn_login;
     @FXML private Button btn_back;
     @FXML private TextField tf_login_username;
     @FXML private LineChart line_chart_main;
     @FXML private Label lbl_warning;
-    @FXML private ToggleGroup radioGroup_DateType;
+    @FXML private ToggleGroup radioGroup_dataType;
     @FXML private ToggleGroup radioGroup_timeFrame;
-    final private UserNameManager userNameManager = new UserNameManager();
-    @FXML private ArrayList<String> currentUserStockDataFiles = new ArrayList<>();
+
+
+    /* ---------------------- GLOBAL DATA ------------------ */
+
+    // Selected chart properties
     private String selectedChartFilePath;
+    private String selectedChartName;
+    private String selectedChartXAxisName;
+    private String selectedChartYAxisName;
+    private String selectedChartMeasurementType;
+    private ArrayList<Number> selectedChartDataSet; // This will be used for displaying data - Main Chart, nothing else
+
+    static private String sideLineChartFilePath;
+    static private String sideChartMeasurementType;
+
+    static private UserNameManager userNameManager = new UserNameManager();
+    private final double LINE_CHART_SIZE = 0.2;
+
+    static private AlphaVantageQuery alphaVantageQueryManager = new AlphaVantageQuery();
+
+    private ArrayList<LineChart> loadedCharts = new ArrayList<>();
+
+    final String APIKEY = "UZWQWLMCV2TNGH7T";
 
 
-    ArrayList<Number> FocusedData;
+    /*-------------------- METHODS -------------------------------- */
 
-    @FXML protected void mouseClickEventHandle(javafx.scene.input.MouseEvent event) {
-        System.out.println(event.getSource());
+
+    /* RADIO BUTTON METHODS */
+    private String getTimeFrameRadioValue(){
+        String result;
+        RadioButton selectedTimeFrameRadio = (RadioButton) radioGroup_timeFrame.getSelectedToggle();
+        String selectedTimeFrameRadioString = selectedTimeFrameRadio.getText();
+
+        result = selectedTimeFrameRadioString;
+        return result;
+    }
+    private String getDataTypeRadioValue() {
+        String result;
+        RadioButton selectedDataTypeRadio = (RadioButton) radioGroup_dataType.getSelectedToggle();
+        String selectedDataTypeRadioString = selectedDataTypeRadio.getText();
+
+        result = selectedDataTypeRadioString;
+        return result;
     }
 
-    protected void querySymbol() throws IOException{
-        String SymbolResult = tf_stock_searcher.getText();
-        AlphaVantageQueryMonthly avQuery = new AlphaVantageQueryMonthly(SymbolResult, "UZWQWLMCV2TNGH7T");
-        System.out.println(avQuery.getQuery());
-        avQuery.submitQuery();
-        System.out.println("Done");
+
+    private void setSelectedChartMeasurementType(String input) {
+        this.selectedChartMeasurementType = input;
     }
 
-    private ArrayList<Number> getMainChartDataSet(String fileName) throws IOException{
-
+    /* DATA PREPARATION METHODS */
+    private ArrayList<Number> getAlphaVantageDataSet(String fileName) throws IOException {
         ArrayList<Number> result = new ArrayList<>();
-        RadioButton selectedRadioButton = (RadioButton) radioGroup_DateType.getSelectedToggle();
-        String selectedRadioButtonString = selectedRadioButton.getText();
-
         AlphaVantageCSVReader AlphaCSV = new AlphaVantageCSVReader(fileName, ",");
 
-        switch (selectedRadioButtonString) {
-            case "Open"     : result = AlphaCSV.getOpenPrices(); System.out.println(selectedRadioButtonString);
+        switch (getDataTypeRadioValue()) {
+            case "Open"     : result = AlphaCSV.getOpenPrices();
                 break;
-            case "Close"    : result = AlphaCSV.getClosePrices(); System.out.println(selectedRadioButtonString);
+            case "Close"    : result = AlphaCSV.getClosePrices();
                 break;
-            case "High"     : result = AlphaCSV.getHighPrices(); System.out.println(selectedRadioButtonString);
+            case "High"     : result = AlphaCSV.getHighPrices();
                 break;
-            case "Low"      : result = AlphaCSV.getLowPrices(); System.out.println(selectedRadioButtonString);
+            case "Low"      : result = AlphaCSV.getLowPrices();
                 break;
-            case "Volume"   : result = AlphaCSV.getVolume(); System.out.println(selectedRadioButtonString);
+            case "Volume"   : result = AlphaCSV.getVolume();
                 break;
         }
 
-        return result;
+        System.out.println(AlphaCSV.getMeasurementType());
+        //setSelectedChartMeasurementType(AlphaCSV.getMeasurementType());
+        sideChartMeasurementType = AlphaCSV.getMeasurementType();
 
+        return result;
     }
 
+    private void submitAlphaVantageQuery() throws IOException {
 
-    private void spawnMainLineChart(String chartName, String xAxisLabel,
-                                    String yAxisLabel, String sourceFile,
-                                    ArrayList<Number> dataSet) throws IOException {
+        String searchInput = tf_stock_searcher.getText();
+        AlphaVantageQuery alphaVantageQueryManager = new AlphaVantageQuery();
+        switch (getTimeFrameRadioValue()) {
 
-        RadioButton selectedRadioButton = (RadioButton) radioGroup_DateType.getSelectedToggle();
-        //String selectedRadioButtonString = selectedRadioButton.getText();
+            case "Intraday"     : alphaVantageQueryManager = new AlphaVantageQueryIntraDay(searchInput, APIKEY, "30min");
+                break;
+            case "Daily"        : alphaVantageQueryManager = new AlphaVantageQueryDaily(searchInput, APIKEY);
+                break;
+            case "Weekly"       : alphaVantageQueryManager = new AlphaVantageQueryWeekly(searchInput, APIKEY);
+                break;
+            case "Monthly"      : alphaVantageQueryManager = new AlphaVantageQueryMonthly(searchInput, APIKEY);
+                break;
+        }
 
-        // TODO If toggle button changes, it should change the data which the Main chart displays.
-        selectedRadioButton.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                System.out.println("Radio button changed - Main chart spawn function");
-                try {
-                    FocusedData = getMainChartDataSet(sourceFile);
-                    MainStockChart mainChart = new MainStockChart(FocusedData);
-                    mainChart.setXAxisLabel(xAxisLabel);
-                    mainChart.setYAxisLabel(yAxisLabel);
-                    mainChart.setChartName(chartName);
-                    mainChart.setMainDataSet(FocusedData);
+        alphaVantageQueryManager.submitQuery();
+        sideLineChartFilePath = alphaVantageQueryManager.getFileName();
+    }
 
-                    // remove chart from main grid - overwriting it
-                    // Otherwise draws new graph atop the old one.
-                    border_main.getChildren().remove(line_chart_main);
-                    line_chart_main = mainChart.getLineChartData();
-                    border_main.getChildren().remove(line_chart_main);
-                    border_main.setCenter(line_chart_main);
-                }
-                catch (IOException io) {
-                    System.out.println("Cannot change main chart. File does not exist.");
+    private void setSelectDataSet(ArrayList<Number> dataSet) {
+        this.selectedChartDataSet = dataSet;
+    }
 
-                }
+    private void spawnMainChart() throws IOException {
 
-
-            }
-        });
-
-        //TODO add way to save graphs to users and load them in
         // Configure chart
-        MainStockChart mainChart = new MainStockChart(FocusedData);
-        mainChart.setXAxisLabel(xAxisLabel);
-        mainChart.setYAxisLabel(yAxisLabel);
-        mainChart.setChartName(chartName);
-        mainChart.setMainDataSet(FocusedData);
+        MainStockChart mainChart = new MainStockChart(selectedChartDataSet);
+        mainChart.setXAxisLabel(selectedChartXAxisName);
+        mainChart.setYAxisLabel(selectedChartYAxisName);
+        mainChart.setChartName(selectedChartName);
+        //mainChart.setMainDataSet(selectedChartDataSet);
 
-        // remove chart from main grid - overwriting it
-        // Otherwise draws new graph atop the old one.
         border_main.getChildren().remove(line_chart_main);
         line_chart_main = mainChart.getLineChartData();
-        border_main.getChildren().remove(line_chart_main);
+       // border_main.getChildren().remove(line_chart_main);
         border_main.setCenter(line_chart_main);
     }
 
-    @FXML protected void spawnSideLineGraph (ActionEvent event) throws IOException{
+    private void updateSelectedChartData(String chartName, String xAxisName, String yAxisName,
+                                         String measurementType, String filePath, ArrayList<Number> stockData) {
+        selectedChartName = chartName;
+        selectedChartXAxisName = xAxisName;
+        selectedChartYAxisName = yAxisName;
+        selectedChartMeasurementType = measurementType;
+        selectedChartFilePath = filePath;
+        selectedChartDataSet = stockData;
+    }
 
-        // TODO save file to user stock data.txt file
-        String searchInput = tf_stock_searcher.getText();
-        String apiKey = "UZWQWLMCV2TNGH7T";
-        // Detect the selected radio button
-        RadioButton selectedRadioButton = (RadioButton) radioGroup_DateType.getSelectedToggle();
-        String selectedRadioButtonString = selectedRadioButton.getText();
+    private void appendThisUserStockDataFile(String fileName) throws IOException {
 
-        RadioButton selectedTimeFrameButton = (RadioButton) radioGroup_timeFrame.getSelectedToggle();
-        String selectedTimeFrameString = selectedTimeFrameButton.getText();
+        boolean fileNameInUserStockDataFiles = userNameManager.getStockDataFiles(userNameManager.getUser()).contains(fileName);
 
-        // Change query depending on time frame button selected.
-        AlphaVantageQuery avQuery = new AlphaVantageQuery();
-        switch (selectedTimeFrameString) {
-
-            case "Intraday"     : avQuery = new AlphaVantageQueryIntraDay(searchInput, apiKey, "30min");
-                                    break;
-            case "Daily"        : avQuery = new AlphaVantageQueryDaily(searchInput, apiKey);
-                                    break;
-            case "Weekly"       : avQuery = new AlphaVantageQueryWeekly(searchInput, apiKey);
-                                    break;
-            case "Monthly"      : avQuery = new AlphaVantageQueryMonthly(searchInput, apiKey);
-                                    break;
-        }
-
-        avQuery.submitQuery();
-
-        if (!userNameManager.getStockDataFiles(userNameManager.getUser()).contains(avQuery.fileName)) {
-
+        if (!fileNameInUserStockDataFiles) {
             // If this query is for data which is not already stored, append it to the users stock data file.
-            userNameManager.appendStockDataFile(userNameManager.getUser(), avQuery.fileName);
-            userNameManager.appendToStockDataFilePaths(avQuery.fileName);
-            }
+            userNameManager.appendStockDataFile(userNameManager.getUser(), fileName);
+            userNameManager.appendToStockDataFilePaths(sideLineChartFilePath);
+        }
+    }
 
+    @FXML protected void saveChartToUserFiles(ActionEvent event) throws IOException {
+
+        appendThisUserStockDataFile(selectedChartFilePath);
+        //IOMethods.appendThisUserStockDataFile(selectedChartFilePath, );
+
+    }
+
+    // TODO need method to save line chart to user data
+    @FXML protected void spawnSideLineGraph (ActionEvent event) throws IOException {
+
+        submitAlphaVantageQuery();
+        ArrayList<Number> stockData = getAlphaVantageDataSet(sideLineChartFilePath); // This will set sideChartMeasurementType
+
+        String symbolName = IOMethods.extractStockDataFileData(sideLineChartFilePath, "symbol name");
+        String timePeriod = IOMethods.extractStockDataFileData(sideLineChartFilePath, "time period");
 
         lbl_warning.setVisible(false);
 
         try {
-            // If search bar empty
-            AlphaVantageCSVReader AlphaCSV = new AlphaVantageCSVReader(avQuery.fileName, ",");
-            ArrayList<Number> stockData;
+            submitAlphaVantageQuery();
 
-            // TODO feature: make it so that when main graph present, switching toggle changes data displayed
-                // Therefore must be able to load all data for a graph and switch on the fly
-                // Radio buttons must know which stock data is there.
-            //  // Write custom Radiobutton class that takes a stock chart as input?
-            switch (selectedRadioButtonString) {
-                case "Open"     : stockData = AlphaCSV.getOpenPrices();
-                                    FocusedData = stockData;
-                                    break;
-                case "Close"    : stockData = AlphaCSV.getClosePrices();
-                                    FocusedData = stockData;
-                                    break;
-                case "High"     : stockData = AlphaCSV.getHighPrices();
-                                    FocusedData = stockData;
-                                    break;
-                case "Low"      : stockData = AlphaCSV.getLowPrices();
-                                    FocusedData = stockData;
-                                    break;
-                case "Volume"   : stockData = AlphaCSV.getVolume();
-                                    FocusedData = stockData;
-                                    break;
-            }
-
-            // Give the side stock chart all relevant information
-            // So that when clicked it can be loaded from each instance
-            // And given to the Main stock chart
-            SideMenuStockChart sideMenuChart = new SideMenuStockChart(FocusedData);
-            sideMenuChart.setChartName(avQuery.getSymbolInput());
-            sideMenuChart.setXAxisLabel(avQuery.getIntervalString());
-            sideMenuChart.setYAxisLabel(AlphaCSV.getMeasurementType());
-            selectedChartFilePath = avQuery.getFileName();
-
+            final SideMenuStockChart sideMenuChart = new SideMenuStockChart(stockData);
+            sideMenuChart.setChartName(symbolName);
+            sideMenuChart.setXAxisLabel(timePeriod);
+            sideMenuChart.setYAxisLabel(sideChartMeasurementType);
+            sideMenuChart.setFilePath(sideLineChartFilePath);
             LineChart chart = sideMenuChart.getLineChartData();
-            Charts.add(chart);
 
-            chart.setOnMouseClicked(new EventHandler<javafx.scene.input.MouseEvent>() {
-                @Override
-                public void handle(javafx.scene.input.MouseEvent event) {
-
-                    try {
-                        spawnMainLineChart(
-                                sideMenuChart.getChartName(),
-                                sideMenuChart.getXAxisLabel(),
-                                sideMenuChart.getYAxisLabel(),
-                                selectedChartFilePath,
-                                sideMenuChart.getMainDataSet()
-                        );
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            //LineChart chart = new RandomGraph().getGraph(true, dataSet );
+            chart.setOnMouseClicked(getGraphClickedHandler(sideMenuChart));
             chart.setMaxSize(LINE_CHART_SIZE, LINE_CHART_SIZE);
 
-            /*
-             * ScrollPane can only contain 1 node. So must use a VBox which will dynamically load
-             * in more charts. This is done by adding the charts to an ArrayList and adding them all
-             * with each call of this method
-             * */
-            ScrollPane scrollPane = new ScrollPane();
-
-            VBox vb_graphBox = new VBox();
-            vb_graphBox.setSpacing(10);
-
-            // Dynamically add charts to vBox
-            for (LineChart lineChart : Charts) {
-                vb_graphBox.getChildren().add(0, lineChart);
-            }
-            vb_graphBox.setPadding(new Insets(10));
-
-            scrollPane.setContent(vb_graphBox);
-            scrollPane.setPannable(true);
-            border_main.setLeft(scrollPane);
-
-            for (String s : userNameManager.stockDataFilePaths) {
-                System.out.println(s);
-            }
+            loadedCharts.add(chart);
+            addLineChartToSideMenu(loadedCharts);
 
         }
         catch (ArrayIndexOutOfBoundsException e) {
 
-            // TODO This is pretty slow. Alternative to try-catch? if-else?
             lbl_warning.setVisible(true);
         }
 
     }
 
-    private ArrayList<String> getStockDataFiles() {
-        ArrayList<String> userStockDataFiles = userNameManager.getStockDataFiles();
-        ArrayList<String> result = new ArrayList<>();
-        for (String stockDataFileString : userStockDataFiles) {
-            // Use REGEX to get query parts
-            // Change file name format to make splitting easier?
+    @FXML protected void addLineChartToSideMenu(ArrayList<LineChart> chartList) {
 
-            // Remove prefix\
-            stockDataFileString = stockDataFileString.replace("StockData\\data", "");
-            stockDataFileString = stockDataFileString.replace("-TIME_SERIES_", " ");
-            stockDataFileString = stockDataFileString.replace(".csv", "");
+        ScrollPane scrollPane = new ScrollPane();
 
-            String[] st = stockDataFileString.split("\\s+", 15);
+        VBox vb_graphBox = new VBox();
+        vb_graphBox.setSpacing(10);
+        vb_graphBox.setPadding(new Insets(10));
 
-            String symbolName = st[0];
-            String timePeriod = st[st.length - 1];
-            String completeFilePath = "StockData\\data" + symbolName + "-TIME_SERIES_" + timePeriod + ".csv";
-            result.add(completeFilePath);
+        for (LineChart lineChart : chartList) {
+            vb_graphBox.getChildren().add(0, lineChart);
         }
 
-        return result;
+        scrollPane.setContent(vb_graphBox);
+        scrollPane.setPannable(true);
+        border_main.setLeft(scrollPane);
     }
 
-    private ArrayList<String> getStockDataSymbolNames() {
-        ArrayList<String> userStockDataFiles = userNameManager.getStockDataFiles();
-        ArrayList<String> result = new ArrayList<>();
-        for (String stockDataFileString : userStockDataFiles) {
-            // Use REGEX to get query parts
-            // Change file name format to make splitting easier?
-
-            // Remove prefix\
-            stockDataFileString = stockDataFileString.replace("StockData\\data", "");
-            stockDataFileString = stockDataFileString.replace("-TIME_SERIES_", " ");
-            stockDataFileString = stockDataFileString.replace(".csv", "");
-
-            String[] st = stockDataFileString.split("\\s+", 15);
-
-            String symbolName = st[0];
-            result.add(symbolName);
-
-        }
-
-        return result;
-    }
-
-    private ArrayList<String> getStockDataTimePeriods() {
-        ArrayList<String> userStockDataFiles = userNameManager.getStockDataFiles();
-        ArrayList<String> result = new ArrayList<>();
-        for (String stockDataFileString : userStockDataFiles) {
-            // Use REGEX to get query parts
-            // Change file name format to make splitting easier?
-
-            // Remove prefix\
-            stockDataFileString = stockDataFileString.replace("StockData\\data", "");
-            stockDataFileString = stockDataFileString.replace("-TIME_SERIES_", " ");
-            stockDataFileString = stockDataFileString.replace(".csv", "");
-
-            String[] st = stockDataFileString.split("\\s+", 15);
-
-            String timePeriod = st[st.length - 1];
-            result.add(timePeriod);
-
-        }
-
-        return result;
-    }
-    private void resolveStockDataFiles() throws IOException{
-
-        /*
-            This method ensures that when a user logs in, the stock data csv files they have
-            access too actually exist.
-         */
-
-        String apiKey = "UZWQWLMCV2TNGH7T";
-        // Get user name
-        // Need to get a list of files the user has
-        ArrayList<String> userStockDataFiles = userNameManager.getStockDataFiles();
-
-        for (String stockDataFileString : userStockDataFiles) {
-            // Use REGEX to get query parts
-            // Change file name format to make splitting easier?
-
-            // Remove prefix
-            stockDataFileString = stockDataFileString.replace("StockData\\data", "");
-            stockDataFileString = stockDataFileString.replace("-TIME_SERIES_", " ");
-            stockDataFileString = stockDataFileString.replace(".csv", "");
-
-            String[] st = stockDataFileString.split("\\s+", 15);
-
-            String symbolName = st[0];
-            String timePeriod = st[st.length - 1];
-            String completeFilePath = "StockData\\data" + symbolName + "-TIME_SERIES_" + timePeriod + ".csv";
-            userNameManager.appendToStockDataFilePaths(completeFilePath);
-
-            for (String s : userNameManager.stockDataFilePaths) {
-                System.out.println(s + " from resolve method");
-            }
-            // Populate list of files for use to draw them to side stock chart bar
-
-            AlphaVantageQuery avQuery = new AlphaVantageQuery();
-            if (timePeriod != null) {
-
-                switch (timePeriod) {
-
-                    case "INTRADAY":
-                        avQuery = new AlphaVantageQueryIntraDay(symbolName, apiKey, "30min");
-                        break;
-                    case "DAILY":
-                        avQuery = new AlphaVantageQueryDaily(symbolName, apiKey);
-                        break;
-                    case "WEEKLY":
-                        avQuery = new AlphaVantageQueryWeekly(symbolName, apiKey);
-                        break;
-                    case "MONTHLY":
-                        avQuery = new AlphaVantageQueryMonthly(symbolName, apiKey);
-                        break;
+    // Could add param for stock chart and move to separate file, static method
+    private EventHandler getGraphClickedHandler(StockChart stockChart) {
+        EventHandler event = new EventHandler<javafx.scene.input.MouseEvent>() {
+            @Override
+            public void handle(javafx.scene.input.MouseEvent event) {
+                try {
+                    updateSelectedChartData(
+                            stockChart.getChartName(),
+                            stockChart.getXAxisLabel(),
+                            stockChart.getYAxisLabel(),
+                            stockChart.getMeasurementType(),
+                            stockChart.getFilePath(),
+                            stockChart.getMainDataSet());
+                    spawnMainChart();
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
             }
+        };
 
-            avQuery.submitQuery();
-
-        }
-
-    }
-
-    private String removeLineFromFile(String file, String lineToRemove) {
-
-        String result;
-        try {
-
-            File inFile = new File(file);
-
-            if (!inFile.isFile()) {
-                System.out.println("Parameter is not an existing file");
-                result = "false";
-                return result;
-            }
-
-            //Construct the new file that will later be renamed to the original filename.
-            File tempFile = new File(inFile.getAbsolutePath() + ".tmp");
-
-            BufferedReader br = new BufferedReader(new FileReader(file));
-            PrintWriter pw = new PrintWriter(new FileWriter(tempFile));
-
-            String line = null;
-
-            //Read from the original file and write to the new
-            //unless content matches data to be removed.
-            while ((line = br.readLine()) != null) {
-
-                if (!line.trim().equals(lineToRemove)) {
-
-                    pw.println(line);
-                    pw.flush();
-                }
-            }
-            pw.close();
-            br.close();
-
-            //Delete the original file
-            if (!inFile.delete()) {
-                System.out.println("Could not delete file");
-                result = "false";
-                return result;
-            }
-
-            //Rename the new file to the filename the original file had.
-            if (!tempFile.renameTo(inFile))
-                System.out.println("Could not rename file");
-
-        }
-        catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        finally {
-            result = "true";
-            System.out.println("Done again");
-            return result;
-        }
-    }
-
-    @FXML private void deleteSideStockChart(ActionEvent event) {
-        // Button attached to each graph
-        Object selectedGraph = event.getSource();
-        //border_main.getChildren().remove(border_main.lookup(".button"));
-
+        return event;
     }
 
     @FXML protected void spawnRecognizedUserSideGraphs(ActionEvent event) throws IOException {
 
-        // TODO in order to enable this to work, see need a function to ensure that the stock data files in each
-        // TODO user txt file, actually exist in the stock data files.
-
-        ArrayList<String> filePaths = getStockDataFiles();
-        ArrayList<String> symbolNames = getStockDataSymbolNames();
-        ArrayList<String> timePeriods = getStockDataTimePeriods();
+        ArrayList<String> userStockDataFiles = userNameManager.getStockDataFiles();
+        ArrayList<String> filePaths = IOMethods.extractStockDataToList(userStockDataFiles, "file path");
+        ArrayList<String> symbolNames = IOMethods.extractStockDataToList(userStockDataFiles, "symbol name");
+        ArrayList<String> timePeriods = IOMethods.extractStockDataToList(userStockDataFiles, "time period");
+        ArrayList<Number> stockData;
         short counter = 0;
+
         try {
             for (String stockDataFilePath : filePaths) {
-                System.out.println(stockDataFilePath);
-                AlphaVantageCSVReader AlphaCSV = new AlphaVantageCSVReader(stockDataFilePath, ",");
 
-                // TODO find a way to repord what type of data we want. Or a way to switch between data easily on a graph
-                FocusedData = AlphaCSV.getVolume();
+                stockData = getAlphaVantageDataSet(stockDataFilePath); // This will set sideChartMeasurementType
 
-                SideMenuStockChart sideMenuChart = new SideMenuStockChart(FocusedData);
+                final SideMenuStockChart sideMenuChart = new SideMenuStockChart(stockData);
                 sideMenuChart.setChartName(symbolNames.get(counter));
                 sideMenuChart.setXAxisLabel(timePeriods.get(counter));
-
+                sideMenuChart.setYAxisLabel(sideChartMeasurementType);
+                sideMenuChart.setFilePath(stockDataFilePath);
                 LineChart chart = sideMenuChart.getLineChartData();
-                Charts.add(chart);
+                loadedCharts.add(chart);
 
-                chart.setOnMouseClicked(new EventHandler<javafx.scene.input.MouseEvent>() {
-                    @Override
-                    public void handle(javafx.scene.input.MouseEvent event) {
-
-                        try {
-                            spawnMainLineChart(
-                                    sideMenuChart.getChartName(),
-                                    sideMenuChart.getXAxisLabel(),
-                                    sideMenuChart.getYAxisLabel(),
-                                    selectedChartFilePath,
-                                    sideMenuChart.getMainDataSet()
-                            );
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
+                chart.setOnMouseClicked(getGraphClickedHandler(sideMenuChart));
                 chart.setMaxSize(LINE_CHART_SIZE, LINE_CHART_SIZE);
 
-                ScrollPane scrollPane = new ScrollPane();
-
-                VBox vb_graphBox = new VBox();
-                vb_graphBox.setSpacing(10);
-
-                // Dynamically add charts to vBox
-                for (LineChart lineChart : Charts) {
-
-                    LineChartWithButton lineChartBtn = new LineChartWithButton(lineChart, new Callable<String>() {
-                        @Override
-                        public String call() throws Exception {
-                            // TODO only capable of deleting one graph file at a time.
-                            return removeLineFromFile("UserData\\" + userNameManager.getUser() + "stockData.txt", stockDataFilePath);
-                        }
-                    });
-                    vb_graphBox.getChildren().add(0, lineChartBtn);
-                }
-
-                vb_graphBox.setPadding(new Insets(10));
-
-                scrollPane.setContent(vb_graphBox);
-                scrollPane.setPannable(true);
-                border_main.setLeft(scrollPane);
+                addLineChartToSideMenu(loadedCharts);
                 counter++;
             }
 
         }
         catch (ArrayIndexOutOfBoundsException e) {
-            System.out.println("Caught");
-            // TODO This is pretty slow. Alternative to try-catch? if-else?
             lbl_warning.setVisible(true);
         }
 
     }
 
-    @FXML protected void testCurrentUser(ActionEvent event) { System.out.println(userNameManager.getUser());}
-
     @FXML
     protected void switchSceneButtonAction(ActionEvent event) throws IOException {
         /* This method demonstrates changing scenes and loading a new FXML file*/
-
 
         Stage stage;
         Parent root;
@@ -549,7 +301,7 @@ public class Controller {
 
                 // Save username from the login screen
                 userNameManager.setUser(tf_login_username.getText());
-                resolveStockDataFiles();
+                IOMethods.resolveStockDataFiles(userNameManager.getStockDataFiles(), APIKEY);
 
             }
             else {
@@ -576,3 +328,20 @@ public class Controller {
 
 
 }
+//     selectedRadioButton.selectedProperty().addListener(new ChangeListener<Boolean>() {
+//            @Override
+//            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+//                System.out.println("Radio button changed - Main chart spawn function");
+//
+//        });
+//
+
+//  for (LineChart lineChart : Charts) {
+//
+//          LineChartWithButton lineChartBtn = new LineChartWithButton(lineChart, new Callable<String>() {
+//@Override
+//public String call() throws Exception {
+//        // TODO only capable of deleting one graph file at a time.
+//        return removeLineFromFile("UserData\\" + userNameManager.getUser() + "stockData.txt", stockDataFilePath);
+//        }
+//        });

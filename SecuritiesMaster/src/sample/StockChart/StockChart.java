@@ -18,9 +18,11 @@ public class StockChart {
     protected float DATA_RANGE;
     public String ChartName;
 
+
     protected String XAxisLabel;
     protected String YAxisLabel;
     protected String MeasurementType;
+
     protected String filePath;
     public StockChart(ArrayList<Number> dataSet) {
         MainDataSet = dataSet;
@@ -92,6 +94,14 @@ public class StockChart {
         result = Collections.min(dataSet, null);
 
         return result;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath) {
+        this.filePath = filePath;
     }
 
 }

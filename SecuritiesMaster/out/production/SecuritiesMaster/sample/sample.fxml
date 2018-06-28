@@ -23,7 +23,7 @@
     </padding>
     <center>
 
-        <LineChart fx:id="line_chart_main" onMouseClicked="#mouseClickEventHandle" title="Main Chart">
+        <LineChart fx:id="line_chart_main" title="Main Chart">
             <xAxis>
                 <CategoryAxis side="BOTTOM" />
             </xAxis>
@@ -56,8 +56,9 @@
                    <Button GridPane.columnIndex="0" GridPane.rowIndex="1" text="Load user data" onAction="#spawnRecognizedUserSideGraphs" />
                    <!-- SEARCH BAR AND BUTTONS -->
                    <Button alignment="TOP_RIGHT" mnemonicParsing="false" onAction="#spawnSideLineGraph" text="Search" GridPane.columnIndex="2" />
+                   <Button alignment="TOP_LEFT" text="Save chart" fx:id="btn_save" onAction="#saveChartToUserFiles" GridPane.columnIndex="2"/>
                    <TextField id="tf_stock_searcher" fx:id="tf_stock_searcher" prefWidth="200.0" promptText="Search..." GridPane.columnIndex="1" />
-                   <Button fx:id="btn_back" alignment="TOP_LEFT" onAction="#testCurrentUser" text="Back" />
+                   <Button fx:id="btn_back" alignment="TOP_LEFT" text="Back" />
                    <Label fx:id="lbl_warning" text="Invalid search term found." textFill="crimson" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                    <Button fx:id="btn_delete_graph" text="Delete graph" textFill="aqua" />
                    <!-- RADIO BUTTON DATA TYPE GRID -->
@@ -76,14 +77,14 @@
                      <children>
                       <RadioButton text="Open" selected="true">
                            <toggleGroup>
-                              <ToggleGroup fx:id="radioGroup_DateType"/>
+                              <ToggleGroup fx:id="radioGroup_dataType"/>
                            </toggleGroup>
                         </RadioButton>
                          
-                        <RadioButton mnemonicParsing="false" text="Volume" toggleGroup="$radioGroup_DateType" GridPane.rowIndex="2" />
-                         <RadioButton mnemonicParsing="false" text="High" toggleGroup="$radioGroup_DateType" GridPane.rowIndex="1" />
-                         <RadioButton mnemonicParsing="false" text="Low" toggleGroup="$radioGroup_DateType" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                         <RadioButton mnemonicParsing="false" text="Close" toggleGroup="$radioGroup_DateType" GridPane.columnIndex="1" />
+                        <RadioButton mnemonicParsing="false" text="Volume" toggleGroup="$radioGroup_dataType" GridPane.rowIndex="2" />
+                         <RadioButton mnemonicParsing="false" text="High" toggleGroup="$radioGroup_dataType" GridPane.rowIndex="1" />
+                         <RadioButton mnemonicParsing="false" text="Low" toggleGroup="$radioGroup_dataType" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                         <RadioButton mnemonicParsing="false" text="Close" toggleGroup="$radioGroup_dataType" GridPane.columnIndex="1" />
                      </children>
                   </GridPane>
 
