@@ -127,16 +127,19 @@ public class IOMethods {
         return result;
     }
 
-    public static void appendThisUserStockDataFile(String fileName, String fileToAppend, UserNameManager userNameManager) throws IOException {
+    public static void appendThisUserStockDataFile(String fileName, String sideLineChartFilePath,
+                                                   UserNameManager userNameManager) throws IOException {
 
         boolean fileNameInUserStockDataFiles = userNameManager.getStockDataFiles(userNameManager.getUser()).contains(fileName);
 
         if (!fileNameInUserStockDataFiles) {
             // If this query is for data which is not already stored, append it to the users stock data file.
             userNameManager.appendStockDataFile(userNameManager.getUser(), fileName);
-            userNameManager.appendToStockDataFilePaths(fileToAppend);
+            //userNameManager.appendToStockDataFilePaths(sideLineChartFilePath);
         }
     }
+
+
 
     public static String removeLineFromFile(String file, String lineToRemove) {
 

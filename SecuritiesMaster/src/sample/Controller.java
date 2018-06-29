@@ -12,12 +12,14 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import sample.AlphaVantage.*;
+import sample.StockChart.LineChartWithButton;
 import sample.StockChart.MainStockChart;
 import sample.StockChart.SideMenuStockChart;
 import sample.StockChart.StockChart;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
 
 public class Controller {
 
@@ -163,15 +165,23 @@ public class Controller {
         if (!fileNameInUserStockDataFiles) {
             // If this query is for data which is not already stored, append it to the users stock data file.
             userNameManager.appendStockDataFile(userNameManager.getUser(), fileName);
-            userNameManager.appendToStockDataFilePaths(sideLineChartFilePath);
+           // userNameManager.appendToStockDataFilePaths(sideLineChartFilePath);
         }
     }
 
     @FXML protected void saveChartToUserFiles(ActionEvent event) throws IOException {
 
-        appendThisUserStockDataFile(selectedChartFilePath);
-        //IOMethods.appendThisUserStockDataFile(selectedChartFilePath, );
+        IOMethods.appendThisUserStockDataFile(selectedChartFilePath, sideLineChartFilePath, userNameManager);
 
+    }
+
+    @FXML protected void deleteSelectedChart(ActionEvent event) throws IOException {
+        String file = "UserData\\" + userNameManager.getUser() + "stockData.txt";
+        IOMethods.removeLineFromFile(file, selectedChartFilePath);
+    }
+
+    @FXML protected void deleteMainChart(ActionEvent event) {
+        border_main.getChildren().remove(line_chart_main);
     }
 
     // TODO need method to save line chart to user data

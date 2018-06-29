@@ -34,6 +34,10 @@
 
     </center>
 
+    <right>
+        <Button text="Save chart" fx:id="btn_save" onAction="#saveChartToUserFiles"/>
+    </right>
+
    <top>
 
       <HBox id="hbox_search_section" fx:id="hbox_search_section" prefHeight="100.0" prefWidth="200.0" spacing="5" BorderPane.alignment="CENTER">
@@ -56,11 +60,10 @@
                    <Button GridPane.columnIndex="0" GridPane.rowIndex="1" text="Load user data" onAction="#spawnRecognizedUserSideGraphs" />
                    <!-- SEARCH BAR AND BUTTONS -->
                    <Button alignment="TOP_RIGHT" mnemonicParsing="false" onAction="#spawnSideLineGraph" text="Search" GridPane.columnIndex="2" />
-                   <Button alignment="TOP_LEFT" text="Save chart" fx:id="btn_save" onAction="#saveChartToUserFiles" GridPane.columnIndex="2"/>
                    <TextField id="tf_stock_searcher" fx:id="tf_stock_searcher" prefWidth="200.0" promptText="Search..." GridPane.columnIndex="1" />
                    <Button fx:id="btn_back" alignment="TOP_LEFT" text="Back" />
                    <Label fx:id="lbl_warning" text="Invalid search term found." textFill="crimson" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                   <Button fx:id="btn_delete_graph" text="Delete graph" textFill="aqua" />
+                   <Button fx:id="btn_delete_graph" text="Delete graph" textFill="aqua" onAction="#deleteSelectedChart"/>
                    <!-- RADIO BUTTON DATA TYPE GRID -->
                   <GridPane GridPane.columnIndex="1" GridPane.rowIndex="1">
                     <columnConstraints>

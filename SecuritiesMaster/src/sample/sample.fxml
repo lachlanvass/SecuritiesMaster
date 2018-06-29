@@ -63,7 +63,7 @@
                    <TextField id="tf_stock_searcher" fx:id="tf_stock_searcher" prefWidth="200.0" promptText="Search..." GridPane.columnIndex="1" />
                    <Button fx:id="btn_back" alignment="TOP_LEFT" text="Back" />
                    <Label fx:id="lbl_warning" text="Invalid search term found." textFill="crimson" visible="false" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                   <Button fx:id="btn_delete_graph" text="Delete graph" textFill="aqua" />
+                   <Button fx:id="btn_delete_graph" text="Delete graph" textFill="aqua" onAction="#deleteSelectedChart"/>
                    <!-- RADIO BUTTON DATA TYPE GRID -->
                   <GridPane GridPane.columnIndex="1" GridPane.rowIndex="1">
                     <columnConstraints>
